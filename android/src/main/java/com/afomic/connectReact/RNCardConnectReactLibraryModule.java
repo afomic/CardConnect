@@ -2,7 +2,6 @@
 package com.afomic.connectReact;
 
 
-import android.support.annotation.NonNull;
 
 import com.cardconnect.consumersdk.CCConsumer;
 import com.cardconnect.consumersdk.CCConsumerTokenCallback;
@@ -21,7 +20,6 @@ public class RNCardConnectReactLibraryModule extends ReactContextBaseJavaModule 
 
     public RNCardConnectReactLibraryModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        setupConsumerApi();
     }
 
     @Override
@@ -38,7 +36,6 @@ public class RNCardConnectReactLibraryModule extends ReactContextBaseJavaModule 
         try {
             validateCardNumber(cardNumber);
             validateCvv(cvv);
-            validateExpiryDate(expiryDate);
 
             CCConsumerCardInfo mCCConsumerCardInfo = new CCConsumerCardInfo();
             mCCConsumerCardInfo.setCardNumber(cardNumber);
@@ -47,17 +44,20 @@ public class RNCardConnectReactLibraryModule extends ReactContextBaseJavaModule 
 
             CCConsumer.getInstance().getApi().generateAccountForCard(mCCConsumerCardInfo, new CCConsumerTokenCallback() {
                 @Override
-                public void onCCConsumerTokenResponseError(@NonNull CCConsumerError ccConsumerError) {
+                public void onCCConsumerTokenResponseError(CCConsumerError ccConsumerError) {
                     promise.reject(new Exception(ccConsumerError.getResponseMessage()));
                 }
 
                 @Override
-                public void onCCConsumerTokenResponse(@NonNull CCConsumerAccount ccConsumerAccount) {
+                public void onCCConsumerTokenResponse(CCConsumerAccount ccConsumerAccount) {
                     promise.resolve(ccConsumerAccount.getToken());
                 }
             });
         } catch (ValidateException e) {
             promise.reject(e);
+        }catch (Exception e){
+            promise.resolve(e);
+            e.printStackTrace();
         }
     }
 
@@ -84,9 +84,9 @@ public class RNCardConnectReactLibraryModule extends ReactContextBaseJavaModule 
         }
 
     }
-
-    private void setupConsumerApi() {
-        CCConsumer.getInstance().getApi().setEndPoint("https://fts.cardconnect.com:6443/cardsecure/cs");
+    @ReactMethod
+    private void setupConsumerApiEndpoint(String url) {
+        CCConsumer.getInstance().getApi().setEndPoint(url);
         CCConsumer.getInstance().getApi().setDebugEnabled(true);
     }
 }
